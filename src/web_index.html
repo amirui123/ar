@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ar — مدیر تسک</title>
+<!--
+  ═══════════════════════════════════════════════════════════════════════
+   این فایل در زمان *کامپایل* داخل باینری می‌نشیند (با include_str! در web.rs)
+   پس در زمان اجرا هیچ فایلی لازم نیست و همه‌چیز آفلاین کار می‌کند.
+   همهٔ درخواست‌ها «نسبی» هستند (/api/...) تا از هر دامنه‌ای کار کند.
+  ═══════════════════════════════════════════════════════════════════════
+-->
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --line:#2a3240;
+    --fg:#e6edf3; --muted:#8b949e; --accent:#58a6ff; --green:#3fb950;
+    --yellow:#d29922; --red:#f85149; --purple:#bc8cff; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:linear-gradient(180deg,#0e1116,#0b0e13 60%);
+    color:var(--fg); font-family:"Vazirmatn","Segoe UI",Tahoma,system-ui,sans-serif;
+    min-height:100vh; padding:24px 16px 64px;
+  }
+  .wrap{max-width:960px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+  h1{font-size:22px;margin:0;display:flex;align-items:center;gap:10px}
+  h1 span.badge{font-size:12px;font-weight:400;color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:999px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(63,185,80,.15)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .stat b{display:block;font-size:24px;line-height:1.4}
+  .stat small{color:var(--muted);font-size:12px}
+  .bar{height:10px;background:var(--panel2);border-radius:999px;overflow:hidden;margin-top:12px;border:1px solid var(--line)}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--green));width:0;transition:width .4s ease}
+  form{display:grid;grid-template-columns:2fr 1fr 1.4fr auto;gap:10px}
+  @media(max-width:700px){form{grid-template-columns:1fr}}
+  input,select,button{font:inherit;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);padding:10px 12px;outline:none}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(88,166,255,.15)}
+  button{cursor:pointer;background:var(--accent);color:#04121f;font-weight:700;border-color:transparent}
+  button:hover{filter:brightness(1.08)}
+  button.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:500}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+  .toolbar input,.toolbar select{padding:8px 10px;font-size:13px}
+  ul{list-style:none;padding:0;margin:0}
+  li{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-bottom:8px;transition:.15s}
+  li:hover{background:var(--panel2);transform:translateY(-1px)}
+  li.done .title{text-decoration:line-through;color:var(--muted)}
+  .title{flex:1;min-width:0;overflow-wrap:anywhere}
+  .id{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  .pill{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+  .p-urgent{color:var(--red);border-color:rgba(248,81,73,.4)}
+  .p-high{color:var(--yellow);border-color:rgba(210,153,34,.4)}
+  .p-normal{color:var(--accent);border-color:rgba(88,166,255,.4)}
+  .p-low{color:var(--muted)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;color:var(--purple);background:rgba(188,140,255,.1);border:1px solid rgba(188,140,255,.25);padding:2px 7px;border-radius:999px}
+  .icons{display:flex;gap:6px}
+  .icon{background:transparent;border:1px solid var(--line);color:var(--fg);padding:6px 10px;border-radius:9px;font-size:14px;font-weight:400}
+  .icon.ok:hover{border-color:var(--green);color:var(--green)}
+  .icon.del:hover{border-color:var(--red);color:var(--red)}
+  .empty{color:var(--muted);text-align:center;padding:28px;border:1px dashed var(--line);border-radius:12px}
+  .toast{position:fixed;inset-inline-start:50%;transform:translateX(50%);bottom:24px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 16px;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1;bottom:32px}
+  .err{color:var(--red)}
+  footer{color:var(--muted);font-size:12px;text-align:center;margin-top:24px;line-height:2}
+  code{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 6px;font-size:12px;direction:ltr;display:inline-block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1><span class="dot"></span> ar <span class="badge">مدیر تسک — سرور Rust بدون وابستگی</span></h1>
+    <div style="display:flex;gap:8px">
+      <button class="ghost" id="refresh">↻ بازخوانی</button>
+      <button class="ghost" id="purge">🧹 پاک‌سازی انجام‌شده‌ها</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="stats" id="stats"></div>
+    <div class="bar"><i id="progress"></i></div>
+  </section>
+
+  <section class="card">
+    <form id="add-form">
+      <input id="title" placeholder="کار تازه‌ای که باید انجام شود…" autocomplete="off">
+      <select id="priority">
+        <option value="low">پایین</option>
+        <option value="normal" selected>معمولی</option>
+        <option value="high">بالا</option>
+        <option value="urgent">فوری</option>
+      </select>
+      <input id="tags" placeholder="برچسب‌ها (با کاما)" autocomplete="off">
+      <button type="submit">افزودن +</button>
+    </form>
+
+    <div class="toolbar">
+      <select id="status">
+        <option value="all">همه</option>
+        <option value="pending" selected>باز</option>
+        <option value="done">انجام‌شده</option>
+      </select>
+      <select id="sort">
+        <option value="id">ترتیب شناسه</option>
+        <option value="urgency" selected>فوریت</option>
+        <option value="priority">اولویت</option>
+        <option value="newest">تازه‌ترین</option>
+        <option value="title">عنوان</option>
+      </select>
+      <input id="q" placeholder="جست‌وجو…">
+      <span id="count" class="pill"></span>
+    </div>
+  </section>
+
+  <ul id="list"></ul>
+
+  <footer>
+    این صفحهٔ HTML داخل خود باینری Rust «حک» شده است (<code>include_str!</code>)<br>
+    API: <code>GET /api/tasks</code> · <code>POST /api/tasks</code> · <code>POST /api/tasks/:id/toggle</code> · <code>DELETE /api/tasks/:id</code> · <code>GET /api/stats</code>
+  </footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ───────────────────────────────────────────────────────────────────────────
+//  از اینجا به بعد جاوااسکریپت است (سمت مرورگر) — نه Rust!
+//  همهٔ درخواست‌ها «نسبی» هستند تا از هر دامنه/پروکسی‌ای کار کنند.
+// ───────────────────────────────────────────────────────────────────────────
+const $ = (id) => document.getElementById(id);
+const LABEL = { low: "پایین", normal: "معمولی", high: "بالا", urgent: "فوری" };
+
+/** کمکی: درخواست به API و گرفتن JSON (با مدیریت خطای خوانا) */
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) throw new Error((data && data.error) || res.statusText);
+  return data;
+}
+
+function toast(msg, isError = false) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " err" : "");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => (t.className = "toast"), 2600);
+}
+
+/** قالب‌بندی زمان نسبی (فقط برای زیبایی) */
+function age(seconds) {
+  if (seconds < 60) return "همین حالا";
+  if (seconds < 3600) return Math.floor(seconds / 60) + " دقیقه پیش";
+  if (seconds < 86400) return Math.floor(seconds / 3600) + " ساعت پیش";
+  return Math.floor(seconds / 86400) + " روز پیش";
+}
+
+/** ساخت DOM یک تسک — توجه: از textContent استفاده می‌کنیم، نه innerHTML (ضد XSS) */
+function renderTask(task) {
+  const li = document.createElement("li");
+  if (task.done) li.className = "done";
+
+  const id = document.createElement("span");
+  id.className = "id";
+  id.textContent = "#" + task.id;
+
+  const title = document.createElement("span");
+  title.className = "title";
+  title.textContent = task.title;
+
+  const prio = document.createElement("span");
+  prio.className = "pill p-" + task.priority;
+  prio.textContent = LABEL[task.priority] || task.priority;
+
+  const tags = document.createElement("span");
+  tags.className = "tags";
+  (task.tags || []).forEach((t) => {
+    const s = document.createElement("span");
+    s.className = "tag";
+    s.textContent = t;
+    tags.appendChild(s);
+  });
+
+  const when = document.createElement("span");
+  when.className = "id";
+  when.textContent = age(Math.max(0, Math.floor(Date.now() / 1000) - task.created_at));
+
+  const icons = document.createElement("span");
+  icons.className = "icons";
+
+  const toggle = document.createElement("button");
+  toggle.className = "icon ok";
+  toggle.textContent = task.done ? "↺" : "✓";
+  toggle.title = task.done ? "برگرداندن به حالت باز" : "انجام شد";
+  toggle.onclick = async () => {
+    try {
+      await api(`/api/tasks/${task.id}/toggle`, { method: "POST" });
+      toast(task.done ? "به حالت باز برگشت" : "انجام شد ✓");
+      await load();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  const del = document.createElement("button");
+  del.className = "icon del";
+  del.textContent = "🗑";
+  del.title = "حذف";
+  del.onclick = async () => {
+    try {
+      await api(`/api/tasks/${task.id}`, { method: "DELETE" });
+      toast("حذف شد");
+      await load();
+    } catch (e) { toast(e.message, true); }
+  };
+
+  icons.append(toggle, del);
+  li.append(id, title, prio, tags, when, icons);
+  return li;
+}
+
+async function load() {
+  const params = new URLSearchParams({
+    status: $("status").value,
+    sort: $("sort").value,
+  });
+  if ($("q").value.trim()) params.set("q", $("q").value.trim());
+
+  try {
+    const [list, stats] = await Promise.all([
+      api("/api/tasks?" + params.toString()),
+      api("/api/stats"),
+    ]);
+
+    // آمار
+    $("stats").innerHTML = "";
+    const cards = [
+      ["کل تسک‌ها", stats.total, ""],
+      ["انجام‌شده", stats.done, "var(--green)"],
+      ["باز", stats.pending, "var(--yellow)"],
+      ["فوریت کل", (stats.by_priority && stats.by_priority.urgent) || 0, "var(--red)"],
+    ];
+    cards.forEach(([label, value, color]) => {
+      const d = document.createElement("div");
+      d.className = "stat";
+      const b = document.createElement("b");
+      b.textContent = value;
+      if (color) b.style.color = color;
+      const s = document.createElement("small");
+      s.textContent = label;
+      d.append(b, s);
+      $("stats").appendChild(d);
+    });
+    $("progress").style.width = (stats.progress_percent || 0) + "%";
+
+    // فهرست
+    const ul = $("list");
+    ul.innerHTML = "";
+    $("count").textContent = list.count + " تسک";
+    if (!list.count) {
+      const div = document.createElement("div");
+      div.className = "empty";
+      div.textContent = "چیزی اینجا نیست — یک تسک تازه اضافه کن ✨";
+      ul.appendChild(div);
+      return;
+    }
+    list.tasks.forEach((t) => ul.appendChild(renderTask(t)));
+  } catch (e) {
+    toast("خطا در اتصال به سرور: " + e.message, true);
+  }
+}
+
+// فرم افزودن
+$("add-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = $("title").value.trim();
+  if (!title) return toast("عنوان نمی‌تواند خالی باشد", true);
+  try {
+    await api("/api/tasks", {
+      method: "POST",
+      body: JSON.stringify({
+        title,
+        priority: $("priority").value,
+        tags: $("tags").value,
+      }),
+    });
+    $("title").value = "";
+    $("tags").value = "";
+    toast("تسک اضافه شد ✓");
+    await load();
+  } catch (err) { toast(err.message, true); }
+});
+
+// فیلترها
+["status", "sort"].forEach((id) => $(id).addEventListener("change", load));
+let debounce;
+$("q").addEventListener("input", () => { clearTimeout(debounce); debounce = setTimeout(load, 250); });
+$("refresh").addEventListener("click", load);
+$("purge").addEventListener("click", async () => {
+  try {
+    const r = await api("/api/purge", { method: "POST" });
+    toast(r.removed ? `${r.removed} تسک پاک شد` : "چیزی برای پاک‌سازی نبود");
+    await load();
+  } catch (e) { toast(e.message, true); }
+});
+
+load();
+</script>
+</body>
+</html>

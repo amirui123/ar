@@ -45,7 +45,7 @@ cargo run -- demo ownership                        # فقط یک مفهوم
 | ۹ | [`src/web.rs`](src/web.rs) | `TcpListener`، پارس HTTP دستی، `Arc<Mutex<T>>`، `include_str!` |
 | ۱۰ | [`src/demos/`](src/demos) | ۱۵ دموی مستقل: مالکیت، عمر، صفت‌ها، unsafe، ماکرو، ایتراتور و … |
 
-📚 و پوشهٔ [`docs/`](docs) یک **مرجع فارسی کامل** است: ۱۸ سند، از سینتکس تا ترفندهای حرفه‌ای.
+📚 و پوشهٔ [`docs/`](docs/README.md) یک **مرجع فارسی کامل** است: ۱۸ سند، از سینتکس تا ترفندهای حرفه‌ای.
 از [`docs/README.md`](docs/README.md) (فهرست + مسیرهای مطالعه) یا
 [`docs/00-roadmap.md`](docs/00-roadmap.md) (برنامهٔ ۶ هفته‌ای) شروع کن.
 
@@ -229,4 +229,4 @@ ar/
 
 ## 📄 مجوز
 
-MIT — [LICENSE](LICENSE)
+MIT — [LICENSE](https://github.com/amirui123/ar/blob/main/LICENSE)

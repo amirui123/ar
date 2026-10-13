@@ -75,6 +75,8 @@ sudo apt install rustc cargo      # دبیان/اوبونتو — معمولاً
 | `cargo add <crate>` | افزودن وابستگی (نیاز به `cargo-edit` در نسخه‌های قدیمی) |
 | `cargo publish` | انتشار روی crates.io |
 
+> 📌 `rustfmt` و `clippy` جزو **کامپوننت‌های rustup** هستند. اگر Rust را با روش بدون rustup نصب کرده باشی (بخش نصب آفلاین)، ممکن است این دو در دسترس نباشند؛ کد همان‌طور با `cargo build` و `cargo test` کار می‌کند و برای این پروژه هر دو باید **صفر هشدار** بدهند.
+
 ### فلگ‌های مفید
 ```bash
 cargo build --offline            # بدون شبکه (کش موجود)

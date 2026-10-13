@@ -447,7 +447,7 @@ strip = true             # حذف نمادها
 
 **#۹۴ `clippy` را جدی بگیر:**
 ```bash
-cargo clippy --all-targets -- -D warnings        # خود پروژه: صفر هشدار
+cargo clippy --all-targets -- -D warnings        # هشدار را خطا کن (در CI)
 cargo clippy -- -W clippy::pedantic              # سختگیرانه‌تر
 ```
 (فقط دام‌های واقعی را `#[allow]` کن — با دلیل.)

@@ -12,7 +12,7 @@
 //! 📜 قاعدهٔ طلایی: هر بلوک `unsafe` باید یک کامنت `SAFETY:` داشته باشد که
 //! بگوید *چرا* شرایط برقرار است. در کد حرفه‌ای این اجباری است.
 
-use std::ffi::{c_char, c_int};
+use std::ffi::{c_char, c_int, c_void};
 
 use crate::color;
 
@@ -93,6 +93,8 @@ unsafe extern "C" {
     fn puts(s: *const c_char) -> c_int;
     /// شناسهٔ فرایند (فقط لینوکس/یونیکس)
     fn getpid() -> c_int;
+    /// تخلیهٔ بافر stdio زبان C — `NULL` یعنی «همهٔ جریان‌های باز»
+    fn fflush(stream: *mut c_void) -> c_int;
 }
 
 fn ffi_call() {
@@ -107,6 +109,15 @@ fn ffi_call() {
     // SAFETY: اشاره‌گر به یک رشتهٔ C معتبر و نول‌ترمینال است.
     unsafe {
         puts(greeting.as_ptr());
+    }
+
+    // 🎯 ترفند مهم FFI که همه به آن می‌خورند: خروجی `puts` در بافرِ stdio
+    // خودِ زبان C می‌ماند و ممکن است **بعد از** همهٔ نوشته‌های Rust بیرون
+    // بیاید (ترتیب خروجی به‌هم می‌ریزد). با `fflush(NULL)` همهٔ جریان‌های C
+    // فوراً تخلیه می‌شوند.
+    // SAFETY: طبق قرارداد کتابخانهٔ C، آرگومان NULL یعنی «همهٔ جریان‌های باز».
+    unsafe {
+        fflush(std::ptr::null_mut());
     }
 
     // SAFETY: getpid هیچ پیش‌نیازی ندارد.

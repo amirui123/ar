@@ -60,5 +60,8 @@ echo
 echo "برای استفاده، هر بار این را اجرا کن (یا در ~/.bashrc بگذار):"
 echo "    export PATH=\"$PREFIX/bin:\$PATH\""
 echo
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 echo "تست سریع:"
-echo "    cd $(dirname "$(readlink -f "$0")")/.. && cargo run -- demo hello"
+echo "    cd \"$ROOT\" && cargo run -- demo          # فهرست موضوع‌های آموزشی"
+echo "    cd \"$ROOT\" && cargo run -- demo all       # اجرای همهٔ دموها"
+echo "    cd \"$ROOT\" && bash scripts/run-web.sh    # بالا آوردن رابط وب روی :8080"

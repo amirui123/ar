@@ -88,6 +88,7 @@ ar list [--status all|pending|done] [--tag T] [--search Q] [--sort id|urgency|pr
 ar done <#>… | ar undo <#>… | ar rm <#>… [--force] | ar purge
 ar stats [--json] | ar export | ar seed
 ar serve [--port 8080] [--host 0.0.0.0]
+bash scripts/run-web.sh   # همین سرور + چک/ساخت خودکار تول‌چین، باینری و داده
 ar demo <موضوع>
 ```
 
@@ -190,7 +191,8 @@ ar/
 ├── Cargo.toml            # شناسنامهٔ پروژه + پروفایل‌های بهینه‌سازی
 ├── README.md             # همین فایل (به مستندات کریت هم تزریق می‌شود!)
 ├── scripts/
-│   └── setup-rust.sh     # نصب Rust بدون rustup (ترفند محیط بسته)
+│   ├── setup-rust.sh     # نصب Rust بدون rustup (ترفند محیط بسته)
+│   └── run-web.sh        # بالا آوردن رابط وب + ترمیم خودکار مقدمات
 ├── src/
 │   ├── main.rs           # لایهٔ نمایش: آرگومان → منطق → چاپ
 │   ├── lib.rs            # ریشهٔ کتابخانه + مستندات

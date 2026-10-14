@@ -91,6 +91,7 @@ fn run() -> Result<ExitCode> {
                 "purge" => cmd_purge(&mut app, &args),
                 "stats" => cmd_stats(&app, &args),
                 "export" => cmd_export(&app, &args),
+                "html" | "report" => cmd_html(&app, &args),
                 "seed" => cmd_seed(&mut app, &args),
                 "serve" => ar::demos::serve(app, &args),
                 "demo" => ar::demos::run_demo(&args),
@@ -363,6 +364,25 @@ fn cmd_export(app: &App, _args: &Args) -> Result<ExitCode> {
 }
 
 /// `ar seed` — پر کردن با دادهٔ نمونه
+/// `ar html [--out report.html]` — ساخت گزارش HTML ایستا (بدون سرور).
+///
+/// 🎯 این زیرفرمان نشان می‌دهد «HTML» فقط کار سرور وب نیست: خودِ برنامه
+/// می‌تواند یک فایل تک‌تکه بسازد که همه‌جا و آفلاین باز می‌شود.
+fn cmd_html(app: &App, args: &Args) -> Result<ExitCode> {
+    let out = PathBuf::from(args.flag_or(&["out", "o"], "report.html"));
+
+    let bytes = ar::report::write_report(app, &out)?;
+
+    println!(
+        "{} گزارش HTML ساخته شد: {}",
+        color::green("✔"),
+        color::bold(&out.display().to_string())
+    );
+    println!("  حجم: {} بایت · {} تسک", bytes, app.tasks().len());
+    println!("  {}", color::dim("این فایل مستقل است — بدون سرور و آفلاین باز می‌شود."));
+    Ok(ExitCode::SUCCESS)
+}
+
 fn cmd_seed(app: &mut App, _args: &Args) -> Result<ExitCode> {
     let n = app.seed()?;
     app.save()?;
@@ -435,6 +455,7 @@ fn print_help() {
     println!("  {}                پاک‌سازی همهٔ انجام‌شده‌ها", b("purge"));
     println!("  {}                آمار  {}", b("stats"), d("[--json]"));
     println!("  {}               چاپ همهٔ داده‌ها به‌صورت JSON", b("export"));
+    println!("  {}           ساخت گزارش HTML مستقل  {}", b("html"), d("[--out report.html]"));
     println!("  {}                 افزودن ۵ تسک نمونه", b("seed"));
     println!("  {}                اجرای سرور وب  {}", b("serve"), d("[--port 8080] [--host 0.0.0.0]"));
     println!("  {}          دموی مفاهیم زبان  {}", b("demo <موضوع>"), d("(برای فهرست: ar demo)"));

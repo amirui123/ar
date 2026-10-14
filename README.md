@@ -43,7 +43,8 @@ cargo run -- demo ownership                        # فقط یک مفهوم
 | ۷ | [`src/table.rs`](src/table.rs) | `write!`، عرض یونیکد، **پاک‌کردن کدهای ANSI**، برش امن رشته |
 | ۸ | [`src/color.rs`](src/color.rs) | ANSI، `static` + **اتمیک**، احترام به `NO_COLOR`، `IsTerminal` |
 | ۹ | [`src/web.rs`](src/web.rs) | `TcpListener`، پارس HTTP دستی، `Arc<Mutex<T>>`، `include_str!` |
-| ۱۰ | [`src/demos/`](src/demos) | ۱۵ دموی مستقل: مالکیت، عمر، صفت‌ها، unsafe، ماکرو، ایتراتور و … |
+| ۱۰ | [`src/report.rs`](src/report.rs) | تولید **HTML ایستا با Rust**: فرار متن (ضد XSS)، تاریخ بدون crate (الگوریتم civil_from_days)، `data-*` + فیلتر سمت مرورگر |
+| ۱۱ | [`src/demos/`](src/demos) | ۱۵ دموی مستقل: مالکیت، عمر، صفت‌ها، unsafe، ماکرو، ایتراتور و … |
 
 📚 و پوشهٔ [`docs/`](docs/README.md) یک **مرجع فارسی کامل** است: ۱۸ سند، از سینتکس تا ترفندهای حرفه‌ای.
 از [`docs/README.md`](docs/README.md) (فهرست + مسیرهای مطالعه) یا
@@ -86,7 +87,7 @@ cargo run -- demo all        # همه (چند ثانیه طول می‌کشد)
 ar add <عنوان> [--priority low|normal|high|urgent] [--tags a,b,c]
 ar list [--status all|pending|done] [--tag T] [--search Q] [--sort id|urgency|priority|newest|oldest|title] [--limit N] [--reverse] [--json]
 ar done <#>… | ar undo <#>… | ar rm <#>… [--force] | ar purge
-ar stats [--json] | ar export | ar seed
+ar stats [--json] | ar export | ar seed | ar html [--out report.html]
 ar serve [--port 8080] [--host 0.0.0.0]
 bash scripts/run-web.sh   # همین سرور + چک/ساخت خودکار تول‌چین، باینری و داده
 ar demo <موضوع>
@@ -205,6 +206,7 @@ ar/
 │   ├── table.rs          # جدول و نوار پیشرفت
 │   ├── color.rs          # رنگ ANSI
 │   ├── web.rs            # سرور HTTP
+│   ├── report.rs         # سازندهٔ گزارش HTML مستقل (ar html)
 │   ├── web_index.html    # رابط وب (با include_str! داخل باینری)
 │   └── demos/            # ۱۵ دموی آموزشی (هر موضوع = یک ماژول)
 ├── examples/             # نمونه‌های استفاده از کتابخانه

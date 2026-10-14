@@ -48,6 +48,7 @@ pub mod demos;
 pub mod errors;
 pub mod json;
 pub mod model;
+pub mod report;
 pub mod store;
 pub mod table;
 pub mod web;

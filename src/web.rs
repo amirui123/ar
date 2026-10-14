@@ -184,7 +184,12 @@ impl Response {
     /// ⚠️ نکتهٔ کلیدی: `Content-Length` باید **تعداد بایت** باشد، نه کاراکتر.
     /// برای متن فارسی («سلام» = ۸ بایت ولی ۴ کاراکتر) این تفاوت حیاتی است —
     /// اگر اشتباه بدهی، مرورگر بدنه را ناقص می‌خواند.
-    fn to_bytes(&self) -> Vec<u8> {
+    ///
+    /// 🔑 `omit_body` برای پاسخ به درخواست `HEAD` است: طبق RFC 9110، پاسخ HEAD
+    /// باید **همان سرایندهای GET** را داشته باشد (شامل `Content-Length` واقعی)
+    /// ولی **بدنه‌ای نداشته باشد**. اگر برای HEAD اصلاً پاسخ ندهیم (۴۰۴)،
+    /// ابزارهای سلامتی‌سنجی و پروکسی‌ها فکر می‌کنند سرویسی اینجا نیست.
+    fn to_bytes(&self, omit_body: bool) -> Vec<u8> {
         let head = format!(
             "HTTP/1.1 {} {}\r\n\
              Content-Type: {}\r\n\
@@ -201,9 +206,10 @@ impl Response {
             self.body.len()
         );
 
-        let mut out = Vec::with_capacity(head.len() + self.body.len());
+        let body = if omit_body { &[][..] } else { &self.body[..] };
+        let mut out = Vec::with_capacity(head.len() + body.len());
         out.extend_from_slice(head.as_bytes());
-        out.extend_from_slice(&self.body);
+        out.extend_from_slice(body);
         out
     }
 }
@@ -225,7 +231,7 @@ fn handle_connection(mut stream: TcpStream, state: Arc<Mutex<App>>) -> Result<()
             Err(e) => {
                 // پاسخ ۴۰۰ بده و تمام
                 let resp = Response::error(400, &format!("درخواست نامعتبر: {e}"));
-                stream.write_all(&resp.to_bytes()).ok();
+                stream.write_all(&resp.to_bytes(false)).ok();
                 return Ok(());
             }
         }
@@ -234,14 +240,24 @@ fn handle_connection(mut stream: TcpStream, state: Arc<Mutex<App>>) -> Result<()
     // OPTIONS (پیش‌پرواز CORS) → پاسخ خالی
     if request.method == "OPTIONS" {
         let resp = Response { status: 204, content_type: "text/plain; charset=utf-8", body: Vec::new() };
-        stream.write_all(&resp.to_bytes()).ok();
+        stream.write_all(&resp.to_bytes(false)).ok();
         return Ok(());
+    }
+
+    // 🔑 ترفند HEAD: به‌جای نوشتن یک شاخهٔ جداگانه برای هر مسیر، متد را به
+    //    GET «نرمال» می‌کنیم و فقط یادمان می‌ماند که بدنه را ننویسیم.
+    //    این‌طور `HEAD /`، `HEAD /api/tasks`، `HEAD /health` و … خودبه‌خود
+    //    همان کد وضعیت و سرایندهای GET را می‌دهند (رفتار درست HTTP).
+    let mut request = request;
+    let head_only = request.method == "HEAD";
+    if head_only {
+        request.method = "GET".to_string();
     }
 
     println!("  {} {} {}", color::dim("→"), color::cyan(&request.method), request.path);
 
     let response = route(&request, &state);
-    stream.write_all(&response.to_bytes())?;
+    stream.write_all(&response.to_bytes(head_only))?;
     stream.flush()?;
     Ok(())
 }
@@ -307,7 +323,10 @@ fn route(req: &Request, state: &Arc<Mutex<App>>) -> Response {
 
     match (req.method.as_str(), segs.as_slice()) {
         // صفحهٔ وب
-        ("GET", []) => Response::html(INDEX_HTML),
+        // 🔑 `/` و `/index.html` هر دو صفحهٔ اصلی را می‌دهند: بعضی پروکسی‌ها و
+        //    مرورگرها مستقیم سراغ `/index.html` می‌روند و اگر ۴۰۴ بگیرند،
+        //    پیش‌نمایش خالی می‌ماند.
+        ("GET", []) | ("GET", ["index.html"]) => Response::html(INDEX_HTML),
         ("GET", ["favicon.ico"]) => Response::text("", 204),
         ("GET", ["health"]) => Response::json(&Json::obj([("ok", Json::from(true))]), 200),
 
@@ -434,6 +453,12 @@ fn route(req: &Request, state: &Arc<Mutex<App>>) -> Response {
             Response::json(&Json::obj([("removed", Json::from(n))]), 200)
         }
 
+        // ── تفکیک «متد غلط» از «مسیر غلط» ──
+        // اگر متد یکی از متدهای شناخته‌شده نیست → ۴۰۵ (شرمنده، این متد را
+        // پشتیبانی نمی‌کنیم). در غیر این صورت مسیر واقعاً وجود ندارد → ۴۰۴.
+        (m, _) if !matches!(m, "GET" | "POST" | "DELETE") => {
+            Response::error(405, "این متد پشتیبانی نمی‌شود")
+        }
         _ => Response::not_found(),
     }
 }
@@ -483,6 +508,11 @@ fn urldecode(input: &str) -> String {
 mod tests {
     use super::*;
 
+    /// یک وضعیت تازه برای تست‌ها (انبارهٔ حافظه‌ای، بدون دست‌زدن به فایل).
+    fn test_state() -> Arc<Mutex<App>> {
+        Arc::new(Mutex::new(App::open(crate::store::open_store(None)).unwrap()))
+    }
+
     fn req(method: &str, target: &str) -> Request {
         let (path, query) = match target.split_once('?') {
             Some((p, q)) => (p.to_string(), q.to_string()),
@@ -512,7 +542,7 @@ mod tests {
     #[test]
     fn response_content_length_is_bytes_not_chars() {
         let resp = Response::text("سلام", 200);
-        let bytes = resp.to_bytes();
+        let bytes = resp.to_bytes(false);
         let head = String::from_utf8_lossy(&bytes[..bytes.len() - resp.body.len()]).to_string();
         // طول «سلام» = ۸ بایت، نه ۴ کاراکتر
         assert!(head.contains("Content-Length: 8"), "{head}");
@@ -532,14 +562,44 @@ mod tests {
         assert!(r.json_body().unwrap().as_object().unwrap().is_empty());
     }
 
+    /// 🔑 HEAD باید مثل GET جواب بدهد ولی بدنه نداشته باشد.
+    ///
+    /// چرا تست مهمی است؟ چون پروکسی‌های پیش‌نمایش/سلامتی‌سنجی زیاد HEAD
+    /// می‌زنند؛ اگر ۴۰۴ بگیرند، سرویس را نمی‌بینند و صفحه خالی می‌ماند.
+    #[test]
+    fn head_like_get_but_without_body() {
+        let state = test_state();
+
+        // پاسخ GET و پاسخ «GETِ بدون بدنه» (چیزی که برای HEAD می‌فرستیم)
+        let get = route(&req("GET", "/"), &state);
+        let head = get.to_bytes(true);
+
+        let head_text = String::from_utf8_lossy(&head);
+        let (headers, body) = head_text.split_once("\r\n\r\n").expect("سرایند و بدنه");
+        assert!(body.is_empty(), "پاسخ HEAD نباید بدنه داشته باشد");
+        assert!(
+            headers.contains(&format!("Content-Length: {}", get.body.len())),
+            "طول اعلام‌شده در HEAD باید همان طول واقعی GET باشد:\n{headers}"
+        );
+        assert!(head_text.starts_with("HTTP/1.1 200 OK"));
+
+        // و خودِ GET باید بدنه داشته باشد (وگرنه صفحه‌ای نیست)
+        assert!(!get.body.is_empty());
+        assert!(String::from_utf8_lossy(&get.body).contains("<html"));
+    }
+
     #[test]
     fn routes_return_expected_status() {
-        let state = Arc::new(Mutex::new(App::open(crate::store::open_store(None)).unwrap()));
+        let state = test_state();
 
-        // صفحهٔ اصلی
+        // صفحهٔ اصلی — از هر دو مسیر
         assert_eq!(route(&req("GET", "/"), &state).status, 200);
+        assert_eq!(route(&req("GET", "/index.html"), &state).status, 200);
         // مسیر ناشناخته
         assert_eq!(route(&req("GET", "/nope"), &state).status, 404);
+        // متد پشتیبانی‌نشده → ۴۰۵ (نه ۴۰۴؛ API درست همین را می‌دهد)
+        assert_eq!(route(&req("PUT", "/api/tasks/1"), &state).status, 405);
+        assert_eq!(route(&req("PATCH", "/"), &state).status, 405);
         // ساخت تسک بدون عنوان → ۴۰۰
         assert_eq!(route(&req("POST", "/api/tasks"), &state).status, 400);
         // فهرست

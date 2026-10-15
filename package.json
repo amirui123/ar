@@ -1,0 +1,23 @@
+{
+  "name": "neuromount-ai-lab",
+  "version": "1.0.0",
+  "description": "آزمایشگاه زنده ساخت و آموزش هوش مصنوعی، مینی LLM و سوار کردن شبکه عصبی روی ایجنت‌ها",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "machine-learning",
+    "mini-llm",
+    "neural-network",
+    "reinforcement-learning",
+    "rust",
+    "persian-ai"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "ml-matrix": "^6.15.0",
+    "natural": "^8.1.1"
+  }
+}

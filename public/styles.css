@@ -1,0 +1,1429 @@
+/* ==========================================================================
+   NeuroMount AI — Dedicated ChatGPT & Claude Style Experience with Fluid Motions
+   ========================================================================== */
+
+:root,
+html[data-theme="claude"] {
+  --bg-stage: #191816;
+  --bg-sidebar: #121110;
+  --bg-composer: rgba(34, 32, 29, 0.85);
+  --bg-card: rgba(42, 39, 35, 0.65);
+  --bg-card-hover: rgba(56, 52, 46, 0.82);
+  --bg-user-bubble: #2c2925;
+  --bg-thinking: rgba(40, 37, 33, 0.65);
+  --border-color: rgba(255, 245, 230, 0.09);
+  --border-focus: rgba(217, 119, 87, 0.55);
+  --text-main: #f3f0ea;
+  --text-muted: #a39e93;
+  --accent-primary: #d97757;
+  --accent-secondary: #e59872;
+  --accent-glow: rgba(217, 119, 87, 0.32);
+  --orb-color-1: #d97757;
+  --orb-color-2: #f59e0b;
+  --orb-color-3: #8b5cf6;
+  --teach-accent: #10b981;
+}
+
+html[data-theme="gpt"] {
+  --bg-stage: #0d0f14;
+  --bg-sidebar: #07080c;
+  --bg-composer: rgba(22, 26, 36, 0.86);
+  --bg-card: rgba(26, 31, 44, 0.68);
+  --bg-card-hover: rgba(36, 43, 61, 0.85);
+  --bg-user-bubble: #1e2433;
+  --bg-thinking: rgba(23, 28, 40, 0.72);
+  --border-color: rgba(148, 163, 184, 0.12);
+  --border-focus: rgba(16, 185, 129, 0.55);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent-primary: #10a37f;
+  --accent-secondary: #22d3ee;
+  --accent-glow: rgba(16, 163, 127, 0.32);
+  --orb-color-1: #10a37f;
+  --orb-color-2: #06b6d4;
+  --orb-color-3: #6366f1;
+  --teach-accent: #10b981;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-stage);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  line-height: 1.68;
+  transition: background-color 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.35s ease;
+}
+
+/* ==========================================================================
+   Main Shell & Collapsible Sidebar
+   ========================================================================== */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: var(--bg-sidebar);
+  border-left: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px;
+  gap: 12px;
+  transition: margin-right 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.3s ease;
+  z-index: 30;
+}
+
+.sidebar.collapsed {
+  margin-right: -280px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.new-chat-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.new-chat-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.plus-icon {
+  font-size: 1.05rem;
+  color: var(--accent-primary);
+}
+
+.sidebar-section-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 8px 0;
+  letter-spacing: 0.02em;
+}
+
+.chat-history-list,
+.learned-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  max-height: 155px;
+  padding-left: 2px;
+}
+
+.history-item {
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 0.81rem;
+  color: var(--text-main);
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: right;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.18s ease;
+}
+
+.history-item:hover,
+.history-item.active {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.learned-pill {
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.22);
+  font-size: 0.76rem;
+  color: #d1fae5;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.learned-pill:hover {
+  background: rgba(16, 185, 129, 0.16);
+  transform: translateX(-2px);
+}
+
+.empty-learned {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+}
+
+/* Sidebar Brain Status Card */
+.sidebar-brain-card {
+  margin-top: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.brain-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brain-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--teach-accent);
+  box-shadow: 0 0 10px var(--teach-accent);
+  animation: pulseDot 2s infinite;
+}
+
+.brain-status-dot.raw {
+  background: #f59e0b;
+  box-shadow: 0 0 10px #f59e0b;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.65; }
+}
+
+.brain-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.brain-mini-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 7px;
+  border-radius: 9px;
+  text-align: center;
+}
+
+.brain-mini-metrics span {
+  display: block;
+  font-size: 0.66rem;
+  color: var(--text-muted);
+}
+
+.brain-mini-metrics strong {
+  font-size: 0.82rem;
+  color: var(--accent-secondary);
+}
+
+.brain-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sb-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.sb-action-btn {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sb-action-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-primary);
+}
+
+.sb-action-btn.primary {
+  background: linear-gradient(135deg, var(--accent-primary), var(--orb-color-3));
+  border-color: transparent;
+  color: #fff;
+}
+
+.sb-action-btn.danger:hover {
+  border-color: #f43f5e;
+  color: #fda4af;
+}
+
+/* ==========================================================================
+   Main Stage & Minimal Floating Header
+   ========================================================================== */
+.main-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-header {
+  height: 58px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(18, 17, 16, 0.55);
+  backdrop-filter: blur(14px);
+  z-index: 20;
+}
+
+.header-right,
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-selector:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-primary);
+}
+
+.model-spark {
+  color: var(--accent-primary);
+  font-size: 1rem;
+  animation: spinSlow 9s linear infinite;
+}
+
+@keyframes spinSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.model-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.model-tag {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--accent-secondary);
+}
+
+.theme-switcher {
+  display: flex;
+  background: var(--bg-card);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.theme-pill {
+  padding: 5px 10px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-pill.active {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.header-lab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.header-lab-btn:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.live-wave {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 8px var(--accent-secondary);
+}
+
+/* ==========================================================================
+   Hero Welcome Screen & Morphing AI Orb
+   ========================================================================== */
+.chat-viewport {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 20px 180px;
+  scroll-behavior: smooth;
+}
+
+.hero-welcome {
+  max-width: 720px;
+  margin: 5vh auto 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-welcome.hidden {
+  display: none;
+}
+
+.orb-container {
+  width: 88px;
+  height: 88px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+.orb-glow {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--orb-color-1), var(--orb-color-3), transparent 70%);
+  filter: blur(18px);
+  opacity: 0.65;
+  animation: orbBreathe 4.2s ease-in-out infinite;
+}
+
+.orb-core {
+  width: 54px;
+  height: 54px;
+  border-radius: 42% 58% 63% 37% / 45% 42% 58% 55%;
+  background: linear-gradient(135deg, var(--orb-color-1), var(--orb-color-2), var(--orb-color-3));
+  box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.45),
+              0 0 25px var(--accent-glow);
+  animation: orbMorph 7s ease-in-out infinite;
+}
+
+.orb-container.typing-active .orb-core {
+  animation-duration: 2.2s;
+  transform: scale(1.12);
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  animation: ringOrbit 8s linear infinite;
+}
+
+.orb-ring.ring-2 {
+  inset: -4px;
+  border-style: dashed;
+  animation-direction: reverse;
+  animation-duration: 12s;
+}
+
+@keyframes orbMorph {
+  0%, 100% {
+    border-radius: 42% 58% 63% 37% / 45% 42% 58% 55%;
+    transform: rotate(0deg) scale(1);
+  }
+  33% {
+    border-radius: 58% 42% 45% 55% / 58% 62% 38% 42%;
+    transform: rotate(120deg) scale(1.06);
+  }
+  66% {
+    border-radius: 38% 62% 52% 48% / 42% 55% 45% 58%;
+    transform: rotate(240deg) scale(0.96);
+  }
+}
+
+@keyframes orbBreathe {
+  0%, 100% { transform: scale(0.95); opacity: 0.55; }
+  50% { transform: scale(1.18); opacity: 0.85; }
+}
+
+@keyframes ringOrbit {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.welcome-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #fff, var(--accent-secondary), #fff);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 6s linear infinite;
+}
+
+.welcome-subtitle {
+  font-size: 0.94rem;
+  color: var(--text-muted);
+  max-width: 560px;
+  margin-bottom: 30px;
+}
+
+.suggestion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+@media (max-width: 680px) {
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.suggestion-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: inherit;
+  text-align: right;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(16px);
+  animation: cardSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.24s ease,
+              border-color 0.24s ease,
+              box-shadow 0.24s ease;
+}
+
+.suggestion-card:nth-child(1) { animation-delay: 0.06s; }
+.suggestion-card:nth-child(2) { animation-delay: 0.12s; }
+.suggestion-card:nth-child(3) { animation-delay: 0.18s; }
+.suggestion-card:nth-child(4) { animation-delay: 0.24s; }
+
+@keyframes cardSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestion-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-primary);
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+}
+
+.s-icon {
+  font-size: 1.35rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.s-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.s-text strong {
+  font-size: 0.86rem;
+  color: var(--text-main);
+}
+
+.s-text span {
+  font-size: 0.77rem;
+  color: var(--text-muted);
+}
+
+/* ==========================================================================
+   Conversation Stream & Message Motions (ChatGPT / Claude Style)
+   ========================================================================== */
+.messages-stream {
+  max-width: 780px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateY(16px) scale(0.99);
+  animation: msgAppear 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes msgAppear {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* پیام کاربر */
+.msg-row.user {
+  align-items: flex-start;
+}
+
+.user-bubble {
+  background: var(--bg-user-bubble);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 12px 18px;
+  border-radius: 20px 20px 6px 20px;
+  max-width: 82%;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+}
+
+/* پیام هوش مصنوعی */
+.msg-row.ai {
+  align-items: stretch;
+}
+
+.ai-message-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.ai-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orb-color-1), var(--orb-color-3));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.95rem;
+  box-shadow: 0 0 14px var(--accent-glow);
+  margin-top: 2px;
+}
+
+.ai-avatar.thinking {
+  animation: avatarPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.12) rotate(18deg); }
+}
+
+.ai-body-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* باکس تفکر تاشو به سبک Claude 3.7 / ChatGPT o1 */
+.thinking-box {
+  background: var(--bg-thinking);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.thinking-header {
+  width: 100%;
+  padding: 8px 13px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.79rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.thinking-header:hover {
+  color: var(--text-main);
+}
+
+.thinking-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thinking-shimmer {
+  background: linear-gradient(90deg, var(--text-muted) 0%, #ffffff 50%, var(--text-muted) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 1.8s linear infinite;
+  font-weight: 600;
+}
+
+@keyframes textShimmer {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+
+.thinking-chevron {
+  transition: transform 0.25s ease;
+  font-size: 0.72rem;
+}
+
+.thinking-box.open .thinking-chevron {
+  transform: rotate(180deg);
+}
+
+.thinking-steps {
+  display: none;
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.77rem;
+  color: var(--text-muted);
+  flex-direction: column;
+  gap: 5px;
+}
+
+.thinking-box.open .thinking-steps {
+  display: flex;
+}
+
+.t-step {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.t-step::before {
+  content: '•';
+  color: var(--accent-primary);
+  font-weight: bold;
+}
+
+/* متن اصلی پاسخ با نشانگر استریم زنده */
+.ai-content {
+  font-size: 0.96rem;
+  color: var(--text-main);
+  line-height: 1.78;
+  word-wrap: break-word;
+}
+
+.ai-content code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.86em;
+  color: var(--accent-secondary);
+}
+
+.stream-cursor {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-primary);
+  margin-right: 5px;
+  vertical-align: middle;
+  animation: cursorBlink 0.75s ease-in-out infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.5); opacity: 0.35; }
+}
+
+/* بنر ویژه وقتی مدل چیز جدیدی یاد می‌گیرد */
+.learned-celebration-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(16, 185, 129, 0.14);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
+  font-size: 0.78rem;
+  font-weight: 600;
+  align-self: flex-start;
+  animation: popScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popScale {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* نوار ابزار زیر هر پیام هوش مصنوعی */
+.msg-actions-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.25s ease;
+}
+
+.msg-actions-bar.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.msg-action-btn:hover {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+.msg-action-btn.teach-highlight {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.22);
+}
+
+.msg-action-btn.teach-highlight:hover {
+  background: rgba(16, 185, 129, 0.18);
+}
+
+/* باکس اصلاح و آموزش آنی زیر هر پیام */
+.inline-teach-popover {
+  display: none;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.32);
+  flex-direction: column;
+  gap: 8px;
+  animation: msgAppear 0.28s ease forwards;
+}
+
+.inline-teach-popover.open {
+  display: flex;
+}
+
+.inline-teach-popover label {
+  font-size: 0.78rem;
+  color: #a7f3d0;
+  font-weight: 600;
+}
+
+.inline-teach-row {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-teach-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.84rem;
+  outline: none;
+}
+
+.inline-teach-row button {
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: none;
+  background: #10b981;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* باکس نمودار احتمالات توکن بعدی زیر پیام */
+.inline-probs-box {
+  display: none;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg-thinking);
+  border: 1px solid var(--border-color);
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inline-probs-box.open {
+  display: flex;
+}
+
+.prob-mini-row {
+  display: grid;
+  grid-template-columns: 95px 1fr 46px;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+}
+
+.prob-mini-track {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.prob-mini-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 99px;
+}
+
+/* ==========================================================================
+   Floating Glassmorphic Composer Dock (Bottom)
+   ========================================================================== */
+.composer-dock {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  padding: 12px 20px 16px;
+  background: linear-gradient(to top, var(--bg-stage) 65%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 25;
+}
+
+.composer-container {
+  width: 100%;
+  max-width: 780px;
+  background: var(--bg-composer);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: 22px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42);
+  transition: border-color 0.25s ease,
+              box-shadow 0.25s ease,
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.composer-container:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.52),
+              0 0 0 3px var(--accent-glow);
+}
+
+.composer-container.teach-active {
+  border-color: rgba(16, 185, 129, 0.65);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.52),
+              0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* بنر حالت آموزش مستقیم داخل کامپوزر */
+.teach-mode-banner {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed rgba(16, 185, 129, 0.35);
+  animation: msgAppear 0.25s ease forwards;
+}
+
+.teach-mode-banner.open {
+  display: flex;
+}
+
+.teach-banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #6ee7b7;
+}
+
+.teach-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.teach-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+@media (max-width: 720px) {
+  .teach-fields-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.teach-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.teach-field label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.teach-field input {
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.83rem;
+  outline: none;
+}
+
+.btn-inject-synapse {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+
+.btn-inject-synapse:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.composer-form textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.96rem;
+  line-height: 1.6;
+  resize: none;
+  max-height: 160px;
+  outline: none;
+  padding: 2px 4px 8px;
+}
+
+.composer-form textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tool-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tool-pill:hover,
+.tool-pill.active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.temp-mini-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+.temp-mini-pill input[type="range"] {
+  width: 58px;
+  accent-color: var(--accent-primary);
+  cursor: pointer;
+}
+
+.send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.send-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.send-btn .icon-stop {
+  display: none;
+}
+
+.send-btn.streaming {
+  background: #f43f5e;
+}
+
+.send-btn.streaming .icon-send {
+  display: none;
+}
+
+.send-btn.streaming .icon-stop {
+  display: block;
+}
+
+.composer-footnote {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 8px;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Slide-Over Brain X-Ray & Autonomous Lab Drawer
+   ========================================================================== */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 60;
+}
+
+.drawer-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.brain-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(560px, 94vw);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  transform: translateX(-102%);
+  transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 20px 0 50px rgba(0, 0, 0, 0.65);
+}
+
+.brain-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-header h2 {
+  font-size: 1rem;
+}
+
+.drawer-header p {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.drawer-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.d-tab {
+  flex: 1;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.77rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.d-tab.active {
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+.drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.d-panel {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.d-panel.active {
+  display: flex;
+}
+
+.drawer-viz-card,
+.drawer-controls-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.viz-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.drawer-viz-card canvas {
+  width: 100%;
+  display: block;
+}
+
+.preset-chips {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.chip-btn.active {
+  border-color: var(--accent-primary);
+  color: #fff;
+  background: rgba(217, 119, 87, 0.18);
+}
+
+#corpus-textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.drawer-btn-row,
+.car-mini-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.drawer-btn {
+  flex: 1;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.drawer-btn.primary {
+  background: var(--accent-primary);
+  border-color: transparent;
+  color: #fff;
+}
+
+.rust-pre {
+  background: #07090e;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 14px;
+  overflow-x: auto;
+  font-size: 0.76rem;
+  line-height: 1.6;
+  color: #67e8f9;
+}

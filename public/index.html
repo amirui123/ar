@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="claude">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuroMount AI | هوش مصنوعی خودآموز متصل به SQLite و GitHub</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <!-- ================================================================= -->
+    <!-- سایدبار تاشو (متصل به دیتابیس واقعی SQLite و گیت‌هاب) -->
+    <!-- ================================================================= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <button class="icon-btn" id="btn-close-sidebar" title="بستن منو">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <line x1="15" y1="3" x2="15" y2="21"/>
+          </svg>
+        </button>
+
+        <button class="new-chat-btn" id="btn-new-chat">
+          <span class="plus-icon">＋</span>
+          <span>گفتگوی جدید</span>
+        </button>
+      </div>
+
+      <!-- بخش ۱: مخازن گیت‌هاب ایندکس‌شده در SQLite -->
+      <div class="sidebar-section-label">
+        🐙 مخازن گیت‌هاب در مغز (<span id="gh-repos-count">3</span>)
+      </div>
+      <div class="learned-items-list" id="gh-repos-list"></div>
+
+      <!-- فرم سریع یادگیری ریپوزیتوری جدید از گیت‌هاب -->
+      <form id="sidebar-gh-form" style="display:flex;gap:5px;padding:0 2px;">
+        <input
+          type="text"
+          id="sidebar-gh-input"
+          placeholder="مخزن گیت‌هاب (مثلاً tokio-rs/axum)"
+          style="flex:1;padding:6px 9px;border-radius:8px;border:1px solid var(--border-color);background:rgba(0,0,0,0.3);color:#fff;font-size:0.74rem;outline:none;"
+        />
+        <button
+          type="submit"
+          class="sb-action-btn primary"
+          id="btn-gh-fetch"
+          style="padding:6px 10px;white-space:nowrap;"
+          title="دانلود و یادگیری مستقیم از GitHub API"
+        >
+          🐙 یاد بگیر
+        </button>
+      </form>
+
+      <!-- بخش ۲: دانش‌های ثبت‌شده در دیتابیس SQLite -->
+      <div class="sidebar-section-label">
+        🗄️ حافظه دیتابیس SQLite (<span id="learned-count-badge">0</span> رکورد)
+      </div>
+      <div class="learned-items-list" id="learned-items-list" style="max-height:190px;">
+        <div class="empty-learned">در حال خواندن از دیتابیس SQLite...</div>
+      </div>
+
+      <!-- کارت وضعیت دیتابیس SQLite و موتور ماشین لرنینگ -->
+      <div class="sidebar-brain-card">
+        <div class="brain-card-row">
+          <div class="brain-status-dot" id="sidebar-brain-dot"></div>
+          <span class="brain-title" id="sidebar-brain-title">SQLite + Bayes ML متصل</span>
+        </div>
+
+        <div class="brain-mini-metrics">
+          <div>
+            <span>گره‌های SQLite</span>
+            <strong id="sb-nodes">0</strong>
+          </div>
+          <div>
+            <span>گراف توکن</span>
+            <strong id="sb-transitions">0</strong>
+          </div>
+          <div>
+            <span>خطا (Loss)</span>
+            <strong id="sb-loss">0.22</strong>
+          </div>
+        </div>
+
+        <div class="brain-card-actions">
+          <button class="sb-action-btn primary" id="btn-open-brain-drawer">
+            🧠 مشاهده دیتابیس، نورون‌ها و پیست
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================================================================= -->
+    <!-- بخش اصلی صفحه چت (به سبک Claude / ChatGPT) -->
+    <!-- ================================================================= -->
+    <div class="main-stage">
+      <!-- هدر شناور بالا -->
+      <header class="stage-header">
+        <div class="header-right">
+          <button class="icon-btn" id="btn-open-sidebar" title="باز کردن منو">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="15" y2="18"/>
+            </svg>
+          </button>
+
+          <div class="model-selector" id="btn-open-drawer-top">
+            <span class="model-spark">✦</span>
+            <span class="model-name">NeuroMount 2.0</span>
+            <span class="model-tag" id="header-epoch-pill">SQLite + GitHub ML</span>
+          </div>
+        </div>
+
+        <div class="header-left">
+          <div class="theme-switcher" role="group" aria-label="انتخاب ظاهر">
+            <button class="theme-pill active" data-set-theme="claude">✨ حس Claude</button>
+            <button class="theme-pill" data-set-theme="gpt">🌌 حس ChatGPT</button>
+          </div>
+
+          <button class="header-lab-btn" id="btn-header-brain-xray">
+            <span class="live-wave"></span>
+            <span>دیتابیس و نورون‌ها</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- ناحیه اسکرول پیام‌ها + صفحه خوش‌آمدگویی وسط‌چین -->
+      <main class="chat-viewport" id="chat-viewport">
+        <section class="hero-welcome" id="hero-welcome">
+          <div class="orb-container" id="ai-orb">
+            <div class="orb-glow"></div>
+            <div class="orb-core"></div>
+            <div class="orb-ring ring-1"></div>
+            <div class="orb-ring ring-2"></div>
+          </div>
+
+          <h1 class="welcome-title">سلام داداش! الان به دیتابیس SQLite و گیت‌هاب وصلم</h1>
+          <p class="welcome-subtitle">
+            هر چیزی بهم بگی (حتی بدون هیچ فرمت خاصی) خودکار توی <strong>دیتابیس SQLite</strong> ذخیره می‌شه. اگه چیزی رو بلد نباشم، ازت می‌پرسم و جواب بعدیت رو برای همیشه یاد می‌گیرم!
+          </p>
+
+          <!-- کارت‌های پیشنهادی برای تست یادگیری واقعی -->
+          <div class="suggestion-grid">
+            <button class="suggestion-card" data-prompt="پروژه سری آذرخش چیه؟">
+              <span class="s-icon">🤔</span>
+              <div class="s-text">
+                <strong>۱. تست «کنجکاوی فعال» (پیشنهادی!)</strong>
+                <span>یه سوال ناشناخته بپرس («پروژه سری آذرخش چیه؟») تا ببینی چطور ازت می‌پرسه و یاد می‌گیره!</span>
+              </div>
+            </button>
+
+            <button class="suggestion-card" data-prompt="اسم من امیر هست و عاشق زبان راست هستم">
+              <span class="s-icon">🧠</span>
+              <div class="s-text">
+                <strong>۲. تست یادگیری خودکار از جمله عادی</strong>
+                <span>بگو «اسم من امیر هست» و بعد بپرس «اسم من چیه؟» تا ببینی تو SQLite ثبت شده!</span>
+              </div>
+            </button>
+
+            <button class="suggestion-card" data-prompt="مخزن karpathy/nanoGPT و micrograd که دانلود کردی چی هستن؟">
+              <span class="s-icon">🐙</span>
+              <div class="s-text">
+                <strong>۳. پرسش از مخازن گیت‌هاب دانلودشده</strong>
+                <span>درباره مخازن واقعی کارپاتی (nanoGPT، micrograd و minbpe) در پروژه بپرس!</span>
+              </div>
+            </button>
+
+            <button class="suggestion-card" data-prompt="از گیت‌هاب یاد بگیر: tokio-rs/axum">
+              <span class="s-icon">🚀</span>
+              <div class="s-text">
+                <strong>۴. دانلود و یادگیری زنده از گیت‌هاب</strong>
+                <span>دستور بده ریپوزیتوری tokio-rs/axum رو همین الان از گیت‌هاب بخونه و یاد بگیره!</span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <!-- لیست پیام‌های گفتگو -->
+        <div class="messages-stream" id="messages-stream"></div>
+      </main>
+
+      <!-- =============================================================== -->
+      <!-- باکس تایپ شناور پایین (Composer) -->
+      <!-- =============================================================== -->
+      <footer class="composer-dock">
+        <div class="composer-container" id="composer-container">
+          <!-- نوار حالت آموزش مستقیم یا گیت‌هاب -->
+          <div class="teach-mode-banner" id="teach-mode-banner">
+            <div class="teach-banner-head">
+              <span>🎓 <strong>ثبت مستقیم دانش در دیتابیس SQLite (`data/neuromount.db`)</strong></span>
+              <button type="button" class="teach-close-btn" id="btn-close-teach-mode">✕</button>
+            </div>
+            <div class="teach-fields-grid">
+              <div class="teach-field">
+                <label>موضوع یا سوال (محرک ورودی):</label>
+                <input type="text" id="composer-teach-q" placeholder="مثلاً: بهترین فریم‌ورک راست چیه؟" />
+              </div>
+              <div class="teach-field">
+                <label>پاسخی که باید در SQLite و مدل ذخیره شود:</label>
+                <input type="text" id="composer-teach-a" placeholder="مثلاً: بدون شک Axum و Actix-web فوق‌العاده هستن!" />
+              </div>
+              <button type="button" class="btn-inject-synapse" id="btn-inject-synapse">
+                <span>⚡ ذخیره در دیتابیس SQLite</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- فرم اصلی پیام -->
+          <form class="composer-form" id="composer-form">
+            <textarea
+              id="composer-input"
+              rows="1"
+              placeholder="هر چی می‌خوای بپرس یا یادم بده (مثلاً: «از گیت‌هاب یاد بگیر: owner/repo» یا هر جمله عادی)..."
+              autocomplete="off"
+            ></textarea>
+
+            <div class="composer-toolbar">
+              <div class="toolbar-right">
+                <button
+                  type="button"
+                  class="tool-pill"
+                  id="btn-toggle-teach-mode"
+                >
+                  <span>🎓 آموزش مستقیم به SQLite</span>
+                </button>
+
+                <button
+                  type="button"
+                  class="tool-pill"
+                  id="btn-learn-github-prompt"
+                >
+                  <span>🐙 یادگیری از ریپوزیتوری گیت‌هاب</span>
+                </button>
+              </div>
+
+              <div class="toolbar-left">
+                <button type="submit" class="send-btn" id="btn-send-msg" aria-label="ارسال پیام">
+                  <svg class="icon-send" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                    <polyline points="5 12 12 5 19 12"></polyline>
+                  </svg>
+                  <svg class="icon-stop" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="composer-footnote">
+          متصل به دیتابیس <strong>SQLite (`data/neuromount.db`)</strong> + موتور ماشین لرنینگ <strong>Natural Bayes & 64D Vector</strong> + مخازن <strong>GitHub (`karpathy/nanoGPT`, `micrograd`, `minbpe`)</strong>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- کشوی کناری کالبدشکافی زنده دیتابیس SQLite، نورون‌ها و پیست خودران -->
+    <!-- ================================================================= -->
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <aside class="brain-drawer" id="brain-drawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div>
+          <h2>🧠 کالبدشکافی زنده دیتابیس SQLite و شبکه عصبی</h2>
+          <p>مشاهده رکوردهای ذخیره‌شده، گراف نورون‌ها، پیست ماشین خودران و کد Rust</p>
+        </div>
+        <button class="icon-btn" id="btn-close-drawer">✕</button>
+      </div>
+
+      <div class="drawer-tabs">
+        <button class="d-tab active" data-dtab="dtab-neural">🗄️ دیتابیس SQLite و نورون‌ها</button>
+        <button class="d-tab" data-dtab="dtab-car">🏎️ سوار کردن مغز روی ماشین</button>
+        <button class="d-tab" data-dtab="dtab-rust">🦀 کد خروجی Rust</button>
+      </div>
+
+      <div class="drawer-body">
+        <div class="d-panel active" id="dtab-neural">
+          <div class="drawer-viz-card">
+            <div class="viz-label">فعالسازی لحظه‌ای نورون‌ها در حین پردازش پیام و بردار 64 بعدی</div>
+            <canvas id="llm-neural-canvas" width="460" height="215"></canvas>
+          </div>
+
+          <div class="drawer-viz-card">
+            <div class="viz-label">آخرین رکوردهای ثبت‌شده در جدول <code>knowledge_nodes</code> دیتابیس SQLite</div>
+            <div id="sqlite-records-table" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+        </div>
+
+        <div class="d-panel" id="dtab-car">
+          <div class="car-mini-bar">
+            <button class="drawer-btn primary" id="btn-car-master">🏆 سوار کردن مغز استاد</button>
+            <button class="drawer-btn" id="btn-car-fastforward">⚡ جهش +۸ نسل</button>
+            <button class="drawer-btn" id="btn-car-raw">🐣 مغز خام</button>
+          </div>
+          <div class="drawer-viz-card">
+            <div class="viz-label">پیست ماشین خودران (روی پیست کلیک کن تا مانع بکاری!)</div>
+            <canvas id="car-track-canvas" width="760" height="440" style="width:100%;height:auto;border-radius:10px;"></canvas>
+          </div>
+          <div class="drawer-viz-card">
+            <div class="viz-label">نورون‌های سنسور لیزری و فرمان ماشین پیشتاز</div>
+            <canvas id="car-neural-canvas" width="460" height="220"></canvas>
+          </div>
+        </div>
+
+        <div class="d-panel" id="dtab-rust">
+          <div class="car-mini-bar">
+            <button class="drawer-btn primary" id="btn-copy-rust">📋 کپی کد Rust</button>
+          </div>
+          <pre class="rust-pre" dir="ltr"><code id="rust-code-output"></code></pre>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- اسکریپت‌های هسته -->
+  <script src="/js/neural-engine.js"></script>
+  <script src="/js/mini-llm.js"></script>
+  <script src="/js/brain-visualizer.js"></script>
+  <script src="/js/rl-lab.js"></script>
+  <script src="/js/rust-exporter.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

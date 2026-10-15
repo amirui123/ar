@@ -1,0 +1,32 @@
+[
+  {
+    "id": "preset-car-master",
+    "name": "مغز قهرمان پیست (نسل ۵۰)",
+    "type": "car-agent",
+    "createdAt": "2026-10-15T12:00:00Z",
+    "metrics": {
+      "generation": 50,
+      "fitness": 1840,
+      "sensors": 7,
+      "hidden": [
+        12,
+        8
+      ]
+    },
+    "description": "شبکه عصبی آموزش‌دیده برای رانندگی خودکار با سرعت بالا و جاخالی دادن از موانع",
+    "isPreset": true
+  },
+  {
+    "id": "preset-llm-assistant",
+    "name": "مغز دستیار فارسی و برنامه‌نویسی",
+    "type": "mini-llm",
+    "createdAt": "2026-10-15T12:00:00Z",
+    "metrics": {
+      "epochs": 120,
+      "loss": 0.24,
+      "vocabSize": 195
+    },
+    "description": "مدل زبانی آموزش‌دیده روی دیالوگ‌های دوستانه، هوش مصنوعی و زبان برنامه‌نویسی Rust",
+    "isPreset": true
+  }
+]

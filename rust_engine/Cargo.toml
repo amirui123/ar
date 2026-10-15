@@ -1,0 +1,11 @@
+[package]
+name = "neuromount_engine"
+version = "0.1.0"
+edition = "2021"
+description = "موتور شبکه عصبی و یادگیری ماشین به زبان Rust با قابلیت اتصال به وب (Wasm) و پایتون (PyO3)"
+
+[lib]
+name = "neuromount_engine"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
